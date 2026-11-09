@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Unrelated project folder
+/Part2_Shreya_PES1UG24AM401 2/
