@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import type { ResultSetHeader } from "mysql2";
 import pool from "@/lib/db";
+import clientPromise from "@/lib/mongodb";
 
 export async function POST(request: Request) {
   let connection;
@@ -175,6 +176,26 @@ export async function POST(request: Request) {
     const rideId = (rideResult as ResultSetHeader).insertId;
 
     await connection.commit();
+
+    // Record ride activity in MongoDB
+    try {
+      const client = await clientPromise;
+      const db = client.db("campusride");
+
+      await db.collection("activities").insertOne({
+        userId: driverId,
+        type: "ride_offered",
+        description: "Offered a new ride",
+        metadata: {
+          rideId: Number(rideId),
+          pickupLocation: pickup_location.trim(),
+          destination: destination.trim(),
+        },
+        createdAt: new Date(),
+      });
+    } catch (mongoError) {
+      console.error("Ride activity logging failed:", mongoError);
+    }
 
     return NextResponse.json(
       {
