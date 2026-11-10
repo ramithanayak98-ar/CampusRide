@@ -67,6 +67,8 @@ export default function Home() {
           {!loading && (
             user ? (
               <>
+                <a href="/dashboard">My Dashboard</a>
+                <a href="/activity">Activity History</a>
                 <span>Hi, {user.full_name}!</span>
                 <button onClick={handleLogout}>Logout</button>
               </>
@@ -135,6 +137,30 @@ export default function Home() {
           </p>
           <a href="/bookings">View bookings →</a>
         </article>
+
+        {user && (
+          <>
+            <article className="feature-card">
+              <span className="feature-icon">📊</span>
+              <h2>My Ride Dashboard</h2>
+              <p>
+                View your ride statistics, booking trends,
+                popular routes and activity analytics.
+              </p>
+              <a href="/dashboard">View Dashboard →</a>
+            </article>
+
+            <article className="feature-card">
+              <span className="feature-icon">📋</span>
+              <h2>Activity History</h2>
+              <p>
+                Track your logins, rides offered, bookings
+                and booking cancellations.
+              </p>
+              <a href="/activity">View Activity History →</a>
+            </article>
+          </>
+        )}
       </section>
 
       <footer>
