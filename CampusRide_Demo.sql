@@ -239,3 +239,38 @@ GROUP BY booking_status;
 -- =====================================================
 -- END OF CAMPUSRIDE DEMONSTRATION
 -- =====================================================
+-- ==========================================
+-- SECTION: ADVANCED QUERY DEMONSTRATIONS
+-- ==========================================
+
+USE campus_mobility;
+
+-- 1. ALTER TABLE demonstration
+CREATE TABLE IF NOT EXISTS sql_demo_temp (
+    demo_id INT PRIMARY KEY,
+    demo_name VARCHAR(50)
+);
+
+ALTER TABLE sql_demo_temp
+ADD COLUMN demo_status VARCHAR(20);
+
+-- Verify ALTER
+DESCRIBE sql_demo_temp;
+
+
+-- 2. HAVING clause demonstration
+-- Find booking statuses having more than one booking.
+SELECT
+    booking_status,
+    COUNT(*) AS total_bookings
+FROM bookings
+GROUP BY booking_status
+HAVING COUNT(*) > 1;
+
+
+-- 3. DROP TABLE demonstration
+-- Only removes the temporary demonstration table.
+DROP TABLE IF EXISTS sql_demo_temp;
+
+-- Verify DROP
+SHOW TABLES;
