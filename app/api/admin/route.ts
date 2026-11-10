@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
@@ -30,7 +31,7 @@ export async function GET() {
       );
     }
 
-    // Always check the current role in the database
+    // Verify the current role directly from MySQL
     const [rows] = await pool.execute<RowDataPacket[]>(
       "SELECT role FROM users WHERE user_id = ?",
       [userId]
@@ -54,11 +55,13 @@ export async function GET() {
       success: true,
       message: "Welcome, Admin!",
     });
-  } catch {
+
+  } catch (error) {
+    console.error("Admin authorization error:", error);
+
     return NextResponse.json(
       { success: false, message: "Authentication failed." },
       { status: 401 }
     );
   }
 }
-

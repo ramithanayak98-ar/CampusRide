@@ -27,9 +27,13 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validate password
     if (password.length < 8) {
       return NextResponse.json(
-        { success: false, message: "Password must contain at least 8 characters." },
+        {
+          success: false,
+          message: "Password must contain at least 8 characters.",
+        },
         { status: 400 }
       );
     }
@@ -37,11 +41,16 @@ export async function POST(request: Request) {
     // Hash the password
     const passwordHash = await bcrypt.hash(password, 12);
 
-    // Save student in MySQL
-    const [result] = await pool.execute(
-      `INSERT INTO users (full_name, email, password_hash)
-       VALUES (?, ?, ?)`,
-      [full_name.trim(), email.trim().toLowerCase(), passwordHash]
+    // Save new user with Student role by default
+    await pool.execute(
+      `INSERT INTO users (full_name, email, password_hash, role)
+       VALUES (?, ?, ?, ?)`,
+      [
+        full_name.trim(),
+        email.trim().toLowerCase(),
+        passwordHash,
+        "student",
+      ]
     );
 
     return NextResponse.json(
@@ -51,12 +60,16 @@ export async function POST(request: Request) {
       },
       { status: 201 }
     );
+
   } catch (error: unknown) {
     const dbError = error as { code?: string };
 
     if (dbError.code === "ER_DUP_ENTRY") {
       return NextResponse.json(
-        { success: false, message: "This email is already registered." },
+        {
+          success: false,
+          message: "This email is already registered.",
+        },
         { status: 409 }
       );
     }
@@ -64,7 +77,10 @@ export async function POST(request: Request) {
     console.error("Registration error:", error);
 
     return NextResponse.json(
-      { success: false, message: "Registration failed. Please try again." },
+      {
+        success: false,
+        message: "Registration failed. Please try again.",
+      },
       { status: 500 }
     );
   }

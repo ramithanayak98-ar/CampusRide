@@ -29,9 +29,19 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (response.ok && data.success) {
+        const role = data.user?.role;
+
         setMessage("Login successful! Redirecting...");
-        router.push("/");
+
+        if (role === "admin") {
+          router.replace("/admin");
+        } else if (role === "student") {
+          router.replace("/dashboard");
+        } else {
+          setMessage("Your account role is invalid. Please contact support.");
+        }
+
         router.refresh();
       } else {
         setMessage(data.message || "Login failed.");
@@ -53,6 +63,14 @@ export default function LoginPage() {
         <p style={styles.subtitle}>
           Login to continue your campus journey.
         </p>
+
+        <div style={styles.info}>
+          <strong>Student and Admin Login</strong>
+          <p>
+            Your account role will be detected automatically
+            after successful login.
+          </p>
+        </div>
 
         <form onSubmit={handleLogin}>
           <label style={styles.label}>Email Address</label>
@@ -80,7 +98,10 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            style={styles.button}
+            style={{
+              ...styles.button,
+              opacity: loading ? 0.7 : 1,
+            }}
           >
             {loading ? "Logging in..." : "Login"}
           </button>
@@ -93,7 +114,7 @@ export default function LoginPage() {
         <p style={styles.footer}>
           Don't have an account?{" "}
           <Link href="/register" style={styles.link}>
-            Register
+            Register as Student
           </Link>
         </p>
 
@@ -137,7 +158,16 @@ const styles: Record<string, React.CSSProperties> = {
   subtitle: {
     textAlign: "center",
     color: "#64748b",
-    marginBottom: "30px",
+    marginBottom: "25px",
+  },
+  info: {
+    background: "#eff6ff",
+    padding: "15px",
+    borderRadius: "8px",
+    marginBottom: "25px",
+    color: "#1e40af",
+    fontSize: "14px",
+    textAlign: "center",
   },
   label: {
     display: "block",
@@ -151,6 +181,7 @@ const styles: Record<string, React.CSSProperties> = {
     border: "1px solid #cbd5e1",
     borderRadius: "8px",
     fontSize: "15px",
+    boxSizing: "border-box",
   },
   button: {
     width: "100%",
