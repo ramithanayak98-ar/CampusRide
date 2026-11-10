@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { SignJWT } from "jose";
 import pool from "@/lib/db";
+import clientPromise from "@/lib/mongodb";
 
 export async function POST(request: Request) {
   try {
@@ -65,6 +66,22 @@ export async function POST(request: Request) {
       .setIssuedAt()
       .setExpirationTime("1d")
       .sign(new TextEncoder().encode(secret));
+
+    // Record successful login in MongoDB
+    try {
+      const client = await clientPromise;
+      const db = client.db("campusride");
+
+      await db.collection("activities").insertOne({
+        userId: user.user_id,
+        type: "login",
+        description: "Logged into CampusRide",
+        metadata: {},
+        createdAt: new Date(),
+      });
+    } catch (mongoError) {
+      console.error("Login activity logging failed:", mongoError);
+    }
 
     const response = NextResponse.json({
       success: true,

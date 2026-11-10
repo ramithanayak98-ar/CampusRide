@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { ResultSetHeader, RowDataPacket } from "mysql2";
 import pool from "@/lib/db";
-
+import clientPromise from "@/lib/mongodb";
 async function getUserId() {
   const cookieStore = await cookies();
   const token = cookieStore.get("campusride_token")?.value;
@@ -175,6 +175,26 @@ export async function POST(request: NextRequest) {
     await connection.commit();
     transactionStarted = false;
 
+    // Record booking activity in MongoDB
+    try {
+      const client = await clientPromise;
+      const db = client.db("campusride");
+
+      await db.collection("activities").insertOne({
+        userId,
+        type: "ride_booked",
+        description: "Booked a ride",
+        metadata: {
+          rideId,
+          bookingId: Number(result.insertId),
+          seatsRequested: seats,
+        },
+        createdAt: new Date(),
+      });
+    } catch (mongoError) {
+      console.error("Booking activity logging failed:", mongoError);
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -326,6 +346,25 @@ export async function PATCH(request: NextRequest) {
 
     await connection.commit();
     transactionStarted = false;
+
+    // Record cancellation activity in MongoDB
+    try {
+      const client = await clientPromise;
+      const db = client.db("campusride");
+
+      await db.collection("activities").insertOne({
+        userId,
+        type: "booking_cancelled",
+        description: "Cancelled a booking",
+        metadata: {
+          rideId: Number(booking.ride_id),
+          bookingId,
+        },
+        createdAt: new Date(),
+      });
+    } catch (mongoError) {
+      console.error("Cancellation activity logging failed:", mongoError);
+    }
 
     return NextResponse.json({
       success: true,
